@@ -1,0 +1,212 @@
+import { ChevronDown, Loader2 } from 'lucide-react'
+
+import { CategoryIcon } from '@/app/groups/[groupId]/expenses/category-icon'
+import { Button, ButtonProps } from '@/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command'
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { useMediaQuery } from '@/lib/hooks'
+import { Category } from '@prisma/client'
+import { useTranslations } from 'next-intl'
+import { forwardRef, useEffect, useState } from 'react'
+
+type Props = {
+  categories: Category[]
+  onValueChange: (categoryId: Category['id']) => void
+  defaultValue: Category['id']
+  isLoading: boolean
+}
+
+export function CategorySelector({
+  categories,
+  onValueChange,
+  defaultValue,
+  isLoading,
+}: Props) {
+  const [open, setOpen] = useState(false)
+  const [value, setValue] = useState<number>(defaultValue)
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+
+  useEffect(() => {
+    setValue(defaultValue)
+    onValueChange(defaultValue)
+  }, [defaultValue])
+
+  // ✅ SAFE fallback
+  const selectedCategory =
+    categories.find((category) => category.id === value) ||
+    categories[0] ||
+    null
+
+  if (!categories || categories.length === 0) {
+    return (
+      <Button variant="outline" className="w-full">
+        No categories available
+      </Button>
+    )
+  }
+
+  if (isDesktop) {
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          {selectedCategory && (
+            <CategoryButton
+              category={selectedCategory}
+              open={open}
+              isLoading={isLoading}
+            />
+          )}
+        </PopoverTrigger>
+        <PopoverContent className="p-0" align="start">
+          <CategoryCommand
+            categories={categories}
+            onValueChange={(id) => {
+              setValue(id)
+              onValueChange(id)
+              setOpen(false)
+            }}
+          />
+        </PopoverContent>
+      </Popover>
+    )
+  }
+
+  return (
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
+        {selectedCategory && (
+          <CategoryButton
+            category={selectedCategory}
+            open={open}
+            isLoading={isLoading}
+          />
+        )}
+      </DrawerTrigger>
+      <DrawerContent className="p-0">
+        <CategoryCommand
+          categories={categories}
+          onValueChange={(id) => {
+            setValue(id)
+            onValueChange(id)
+            setOpen(false)
+          }}
+        />
+      </DrawerContent>
+    </Drawer>
+  )
+}
+
+function CategoryCommand({
+  categories,
+  onValueChange,
+}: {
+  categories: Category[]
+  onValueChange: (categoryId: Category['id']) => void
+}) {
+  const t = useTranslations('Categories')
+
+  // ✅ SAFE GROUPING
+  const categoriesByGroup = categories.reduce<Record<string, Category[]>>(
+    (acc, category) => {
+      const group = category.grouping || 'other'
+      return {
+        ...acc,
+        [group]: [...(acc[group] ?? []), category],
+      }
+    },
+    {},
+  )
+
+  return (
+    <Command>
+      <CommandInput placeholder={t('search')} className="text-base" />
+      <CommandEmpty>{t('noCategory')}</CommandEmpty>
+
+      <div className="w-full max-h-[300px] overflow-y-auto">
+        {Object.entries(categoriesByGroup).map(
+          ([group, groupCategories], index) => (
+            <CommandGroup key={index} heading={group}>
+              {groupCategories.map((category) => (
+                <CommandItem
+                  key={category.id}
+                  value={`${category.id}`}
+                  onSelect={(currentValue) => {
+                    const id = Number(currentValue)
+                    onValueChange(id)
+                  }}
+                >
+                  <CategoryLabel category={category} />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ),
+        )}
+      </div>
+    </Command>
+  )
+}
+
+type CategoryButtonProps = {
+  category: Category
+  open: boolean
+  isLoading: boolean
+}
+
+const CategoryButton = forwardRef<HTMLButtonElement, CategoryButtonProps>(
+  (
+    { category, open, isLoading, ...props }: ButtonProps & CategoryButtonProps,
+    ref,
+  ) => {
+    const iconClassName = 'ml-2 h-4 w-4 shrink-0 opacity-50'
+
+    return (
+      <Button
+        variant="outline"
+        role="combobox"
+        aria-expanded={open}
+        className="flex w-full justify-between"
+        ref={ref}
+        {...props}
+      >
+        <CategoryLabel category={category} />
+
+        {isLoading ? (
+          <Loader2 className={`animate-spin ${iconClassName}`} />
+        ) : (
+          <ChevronDown className={iconClassName} />
+        )}
+      </Button>
+    )
+  },
+)
+
+CategoryButton.displayName = 'CategoryButton'
+
+// ✅ FINAL SAFE VERSION
+function CategoryLabel({ category }: { category: Category | null }) {
+  const t = useTranslations('Categories')
+
+  if (!category) {
+    return <div className="text-gray-400">Uncategorized</div>
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <CategoryIcon category={category} className="w-4 h-4" />
+      {category.grouping && category.name
+        ? t(`${category.grouping}.${category.name}`)
+        : 'Uncategorized'}
+    </div>
+  )
+}
