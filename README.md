@@ -1,9 +1,20 @@
 # 🚀 SplitMint — Expense Sharing App
 
-A modern expense-sharing web application inspired by Splitwise, built using Next.js, Prisma, and PostgreSQL. It allows users to manage group expenses, track balances, and simplify bill splitting.
+SplitMint is a full-stack expense-sharing application inspired by Splitwise, designed to simplify group expense management and real-time balance tracking.
 
-🔗 **Live Demo:** https://splitmint-app-1.onrender.com
-💻 **GitHub Repo:** https://github.com/vrushh7/SplitMint-app
+✨ **Key Features:**
+
+* Group expense management
+* Real-time balance calculation (who owes whom)
+* Multiple split options (equal/custom)
+* Clean and intuitive user interface
+
+🎥 **Demo Video (Application Walkthrough):**
+https://drive.google.com/file/d/1OcwfRECPPpkOiH3ffcIQhTKHAgRGNZf1/view?usp=sharing
+
+💻 **GitHub Repository:**
+https://github.com/vrushh7/SplitMint-app
+
 
 ---
 
