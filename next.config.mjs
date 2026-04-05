@@ -27,15 +27,15 @@ const nextConfig = {
   images: {
     remotePatterns
   },
-  // Required to run in a codespace (see https://github.com/vercel/next.js/issues/58019)
   experimental: {
     serverActions: {
       allowedOrigins: [
         'localhost:3000',
-        'splitmint-app-1.onrender.com',
-        '*.onrender.com',
+        'splitmint-project.vercel.app',
+        '*.vercel.app',
       ],
     },
+    turbo: false,  // Add this line
   },
 }
 
